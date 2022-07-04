@@ -51,7 +51,7 @@ def queryData(soql):
 
 # In[ ]:
 
-
+#data from https://data.cms.gov/provider-data/dataset/mj5m-pzi6
 hcpdata = pd.read_csv('hcp_acc_sample.csv')
 hcpdata.shape
 
