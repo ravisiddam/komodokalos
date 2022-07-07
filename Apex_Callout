@@ -1,0 +1,67 @@
+public class SubmitInquirywithRESTAPI {
+private final String clientId = '3MB_Rey';
+private final String  clientSecret = '83E299908943';
+private final String  username = 'target@xample.com';
+private final String  password = 'pwZEDBXMZ9Ccq6dn'; 
+
+public class deserializeResponse {
+public String id;
+public String access_token;
+}
+public class deserializeCaseResponse {
+public String Id;
+}
+public String ReturnAccessToken (SubmitInquirywithRESTAPI inquiry) {
+
+String reqbody = 'grant_type=password&client_id='+clientId+'&client_secret='+clientSecret+'&username='+username+'&password='+password;
+
+Http h = new Http();
+HttpRequest req = new HttpRequest();
+req.setBody(reqbody);
+req.setMethod('POST');
+req.setEndpoint('https://login.salesforce.com/services/oauth2/token');
+HttpResponse res = h.send(req);
+
+deserializeResponse resp1 = (deserializeResponse)JSON.deserialize(res.getbody(), deserializeResponse.class);
+return resp1.access_token;
+}
+
+@future(callout=true)
+public static void callcreateCase(String inqId, String jsonStr) {
+
+SubmitInquirywithRESTAPI inq1 = new SubmitInquirywithRESTAPI();
+String accessToken = inq1.ReturnAccessToken(inq1);
+
+if(accessToken != null){
+//String endpoint = 'https://fushd2-dev-ed.my.salesforce.com/services/data/v54.0/sobjects/Case/';
+String endpoint = 'https://fushd2-dev-ed.my.salesforce.com/services/apexrest/v1/createCase/';
+Http h2 = new Http();
+HttpRequest req1 = new HttpRequest();
+
+req1.setHeader('Authorization', 'Bearer ' + accessToken);
+req1.setHeader('Content-Type', 'application/json');
+req1.setHeader('accept', 'application/json');
+req1.setBody(jsonStr);
+req1.setMethod('POST');
+req1.setEndpoint(endpoint);
+HttpResponse res1 = h2.send(req1);
+system.debug('=======================================>>>>>>>>>>>>>> ' + res1.getBody());
+List<responsewrapper> resp2 = (list<responsewrapper>)JSON.deserialize(res1.getbody(), List<responsewrapper>.class);
+system.debug('======================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+resp2[0].caseNumber);
+//deserializeCaseResponse resp2 = (deserializeCaseResponse)JSON.deserialize(res1.getbody(), deserializeCaseResponse.class);
+//If(resp2[0].statuscode >= '200' && resp2[0].statuscode <= '299'){
+Case cs = [select Id from Case where Id = :inqId limit 1];
+cs.MI_Case_Number__c = resp2[0].caseNumber;
+update cs;
+//}
+}
+}
+
+public class responsewrapper {
+public String caseNumber;
+public String statuscode;
+}
+
+
+
+}
