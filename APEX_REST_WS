@@ -1,0 +1,54 @@
+@RestResource(urlMapping='/v1/createCase/*')
+global with sharing class createCaseService {
+@HttpPost
+global static List<responsewrapper> doPost(){
+//get req body
+
+RestRequest req = RestContext.request;
+String strBody = req.requestBody.toString();
+system.debug('==========>>>>> '+ strBody);
+requestwrapper reqinfo = new requestwrapper();
+reqinfo = (requestwrapper)JSON.deserialize(strBody, requestwrapper.class);
+
+String acctNum = reqinfo.acctNumber;
+//List<String> names = reqinfo.contactName.split(' ');
+//String contName = names[0];
+String contName = reqinfo.contactName;
+
+Account acctId = [select Id from Account where AccountNumber = :acctNum limit 1];
+
+Contact contId = [select Id from Contact where lastName = :contName limit 1];
+
+Case c = new Case();
+c.AccountId = acctId.Id;
+c.ContactId = contId.Id;
+c.inquiry_id_khsource__c = reqinfo.inquiryId;
+c.Subject = reqinfo.Subject;
+c.Description = reqinfo.Description;
+c.kh_inquiry_drug__c = reqinfo.drugName;
+c.kh_inquiry_account_name__c = reqinfo.acctNumber;
+c.kh_inquiry_contact_name__c = reqinfo.contactName;
+insert c;
+system.debug('=====================================>>>>>>>>>> '+c);
+responsewrapper returnResp = new responsewrapper();
+returnResp.caseNumber = c.Id;
+returnResp.statuscode = '200';
+//responsewrapper returnResponse = (responsewrapper)JSON.serialize(returnResp, responsewrapper.class);
+//return returnResponse;
+return new List<responsewrapper>{returnResp};
+//return Blob.valueOf(JSON.serialize(returnResponse));
+
+}
+global class requestwrapper {
+global String inquiryId;
+global String acctNumber;
+global String contactName;
+global String drugName;
+global String Subject;
+global String Description;
+}
+global class responsewrapper {
+global String caseNumber;
+global String statuscode;
+}
+}
